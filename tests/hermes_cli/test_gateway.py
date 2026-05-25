@@ -237,7 +237,6 @@ def test_gateway_install_in_container_with_operational_systemd_uses_systemd(monk
     monkeypatch.setattr(gateway, "is_managed", lambda: False)
 
     calls = []
-    monkeypatch.setattr(gateway, "prompt_yes_no", lambda question, default=True: calls.append(("prompt", question, default)) or True)
     monkeypatch.setattr(
         gateway,
         "systemd_install",
@@ -250,12 +249,12 @@ def test_gateway_install_in_container_with_operational_systemd_uses_systemd(monk
         force=False,
         system=False,
         run_as_user=None,
+        start_now=True,
+        start_on_login=True,
     )
     gateway.gateway_command(args)
 
     assert calls == [
-        ("prompt", "Start the gateway now after installing the service?", True),
-        ("prompt", "Start the gateway automatically on login/boot with systemd?", True),
         ("install", False, False, None, True),
         ("start", False),
     ]
@@ -532,9 +531,7 @@ def test_gateway_install_can_decline_start_now_and_startup(monkeypatch):
     monkeypatch.setattr(gateway, "is_macos", lambda: False)
     monkeypatch.setattr(gateway, "is_managed", lambda: False)
 
-    answers = iter([False, False])
     calls = []
-    monkeypatch.setattr(gateway, "prompt_yes_no", lambda question, default=True: calls.append(("prompt", question, default)) or next(answers))
     monkeypatch.setattr(
         gateway,
         "systemd_install",
@@ -542,12 +539,17 @@ def test_gateway_install_can_decline_start_now_and_startup(monkeypatch):
     )
     monkeypatch.setattr(gateway, "systemd_start", lambda system=False: calls.append(("start", system)))
 
-    args = SimpleNamespace(gateway_command="install", force=True, system=False, run_as_user=None)
+    args = SimpleNamespace(
+        gateway_command="install",
+        force=True,
+        system=False,
+        run_as_user=None,
+        start_now=False,
+        start_on_login=False,
+    )
     gateway.gateway_command(args)
 
     assert calls == [
-        ("prompt", "Start the gateway now after installing the service?", True),
-        ("prompt", "Start the gateway automatically on login/boot with systemd?", True),
         ("install", True, False, None, False),
     ]
 
