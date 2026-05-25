@@ -28,6 +28,19 @@ from agent.anthropic_adapter import (
 from agent.transports import get_transport
 
 
+@pytest.fixture(autouse=True)
+def no_macos_keychain_credentials(monkeypatch):
+    """Keep auth tests hermetic on macOS developer machines.
+
+    Claude Code may store real credentials in Keychain, which otherwise wins
+    over tmp_path credential files and makes these tests depend on local state.
+    """
+    monkeypatch.setattr(
+        "agent.anthropic_adapter._read_claude_code_credentials_from_keychain",
+        lambda: None,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Auth helpers
 # ---------------------------------------------------------------------------

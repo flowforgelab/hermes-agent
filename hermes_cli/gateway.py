@@ -2118,11 +2118,15 @@ def _build_service_path_dirs(project_root: Path | None = None) -> list[str]:
 
     candidates = []
 
-    venv_bin = project_root / "venv" / "bin"
-    if _is_dir(venv_bin):
-        candidates.append(str(venv_bin))
-    elif sys.prefix != sys.base_prefix:
-        candidates.append(str(Path(sys.prefix) / "bin"))
+    detected_venv = _detect_venv_dir()
+    if detected_venv is not None:
+        venv_bin = detected_venv / "bin"
+        if _is_dir(venv_bin):
+            candidates.append(str(venv_bin))
+    else:
+        venv_bin = project_root / "venv" / "bin"
+        if _is_dir(venv_bin):
+            candidates.append(str(venv_bin))
 
     node_bin = project_root / "node_modules" / ".bin"
     if _is_dir(node_bin):
@@ -5079,8 +5083,12 @@ def _gateway_command_inner(args):
                 print_info("  Consider running in foreground instead: hermes gateway run")
                 print_info("  Or use tmux/screen for persistence: tmux new -s hermes 'hermes gateway run'")
                 print()
-            start_now = prompt_yes_no("Start the gateway now after installing the service?", True)
-            start_on_login = prompt_yes_no("Start the gateway automatically on login/boot with systemd?", True)
+            start_now = getattr(args, "start_now", None)
+            if start_now is None:
+                start_now = False if not sys.stdin.isatty() else prompt_yes_no("Start the gateway now after installing the service?", True)
+            start_on_login = getattr(args, "start_on_login", None)
+            if start_on_login is None:
+                start_on_login = True if not sys.stdin.isatty() else prompt_yes_no("Start the gateway automatically on login/boot with systemd?", True)
             systemd_install(
                 force=force,
                 system=system,
