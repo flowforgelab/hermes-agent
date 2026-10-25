@@ -16,7 +16,10 @@ _POOL_PROVIDER = "xai-oauth"
 
 # OpenAI-compatible endpoints; ``/responses`` because the native xAI runtime uses codex_responses.
 _ALLOWED_PATHS: frozenset[str] = frozenset(
-    {"/responses", "/chat/completions", "/completions", "/embeddings", "/models"}
+    {
+        "/responses", "/chat/completions", "/completions", "/embeddings", "/models",
+        "/images/generations", "/images/edits", "/image-generation-models",
+    }
 )
 
 

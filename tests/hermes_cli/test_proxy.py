@@ -17,6 +17,18 @@ from hermes_cli.proxy.adapters.nous_portal import NousPortalAdapter
 from hermes_cli.proxy.adapters.xai import XAIGrokAdapter
 
 
+def test_xai_adapter_allows_subscription_image_endpoints():
+    """External image clients use Hermes-managed subscription OAuth credentials."""
+    assert {
+        "/images/generations", "/images/edits", "/image-generation-models"
+    } <= XAIGrokAdapter().allowed_paths
+
+
+def test_xai_adapter_blocks_unrelated_paths():
+    assert "/account/delete" not in XAIGrokAdapter().allowed_paths
+    assert "/images/arbitrary" not in XAIGrokAdapter().allowed_paths
+
+
 # ---------------------------------------------------------------------------
 # Adapter registry
 # ---------------------------------------------------------------------------
