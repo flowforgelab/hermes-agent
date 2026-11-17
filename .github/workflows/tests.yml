@@ -22,8 +22,16 @@ concurrency:
 
 jobs:
   test:
+    # The full suite needs more than 20 minutes on one 4-vCPU hosted runner,
+    # so every run was cancelled by the job timeout before pytest could report.
+    # pytest-split (already a dev dependency) spreads it over four runners.
+    name: test (${{ matrix.group }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -46,7 +54,7 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          python -m pytest tests/ -q --ignore=tests/integration --ignore=tests/e2e --tb=short -n auto
+          python -m pytest tests/ -q --ignore=tests/integration --ignore=tests/e2e --tb=short -n auto --splits 4 --group ${{ matrix.group }}
         env:
           # Ensure tests don't accidentally call real APIs
           OPENROUTER_API_KEY: ""
