@@ -126,10 +126,16 @@ def _run_switch(raw_input: str, **extra):
         # For other providers, return empty so tests don't depend on them.
         return []
 
+    # switch_model also validates against the provider's real /v1/models
+    # endpoint and reads models.dev. Stub both: the live lists rename models
+    # over time, and validation then "corrects" the requested ID.
     with patch(
         "hermes_cli.model_switch.list_provider_models",
         side_effect=fake_list_provider_models,
-    ):
+    ), patch(
+        "hermes_cli.models.fetch_api_models",
+        return_value=list(_OPENCODE_GO_LIVE),
+    ), patch("agent.models_dev.fetch_models_dev", return_value={}):
         return switch_model(raw_input=raw_input, **defaults)
 
 
